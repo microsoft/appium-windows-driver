@@ -2,7 +2,8 @@
 /* eslint-disable no-console */
 
 var fs = require('fs')
-  , path = require('path');
+  , path = require('path')
+  , os = require('os');
 
 
 function waitForDeps (cb) {
@@ -31,24 +32,27 @@ function waitForDeps (cb) {
 }
 
 if (require.main === module) {
-  // check if cur dir exists
-  var installScript = path.resolve(__dirname, 'build', 'lib', 'installer.js');
-  waitForDeps(function (err) {
-    if (err) {
-      console.warn("Unable to import install script. Re-run `install appium-windows-driver` manually.");
-      return;
-    }
-    fs.stat(installScript, function (err) {
+  if (os.type() !== 'Windows_NT') {
+    console.warn("Unable to install Windows driver on non-Windows system '" + os.type() + "'");
+  } else {
+    // check if cur dir exists
+    var installScript = path.resolve(__dirname, 'build', 'lib', 'installer.js');
+    waitForDeps(function (err) {
       if (err) {
-        console.warn("NOTE: Run 'gulp transpile' before using");
+        console.warn("Unable to import install script. Re-run `install appium-windows-driver` manually.");
         return;
       }
-      require('./build/lib/installer').setupWAD().catch(function (err) {
-        console.error(err.message);
-        console.error("WinAppDriver was not installed; please check your " +
-                      "system and re-run npm install if you need WinAppDriver");
+      fs.stat(installScript, function (err) {
+        if (err) {
+          console.warn("NOTE: Run 'gulp transpile' before using");
+          return;
+        }
+        require('./build/lib/installer').setupWAD().catch(function (err) {
+          console.error(err.message);
+          console.error("WinAppDriver was not installed; please check your " +
+                        "system and re-run npm install if you need WinAppDriver");
+        });
       });
     });
-  });
+  }
 }
-
